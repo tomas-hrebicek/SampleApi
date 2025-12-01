@@ -1,21 +1,17 @@
-﻿using AutoMapper;
-using Sample.Application.DTOs;
+﻿using Sample.Application.DTOs;
 using Sample.Application.Interfaces;
 using Sample.Domain.Domain;
-using Sample.Domain.Entities;
 using Sample.Domain.Interfaces;
 
 namespace Sample.Application.Services
 {
     internal class ProductsService : IProductsService
     {
-        public ProductsService(IProductsRepository repository, IMapper mapper)
+        public ProductsService(IProductsRepository repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        private readonly IMapper _mapper;
         private readonly IProductsRepository _repository;
 
         public async Task<Result<ProductDTO>> GetAsync(int id)
@@ -28,21 +24,21 @@ namespace Sample.Application.Services
             }
             else
             {
-                return Result.Success(_mapper.Map<Product, ProductDTO>(product));
+                return Result.Success(ProductDTO.Map(product));
             }
         }
 
         public async Task<Result<IEnumerable<ProductDTO>>> ListAsync()
         {
             var products = await _repository.ListAsync();
-            return Result.Success(_mapper.Map<IEnumerable<Product>, IEnumerable<ProductDTO>>(products));
+            return Result.Success(products.Select(x => ProductDTO.Map(x)));
         }
 
         public async Task<Result<PagedList<ProductDTO>>> ListAsync(PaginationSettingsDTO paginationSettings)
         {
-            var settings = _mapper.Map<PaginationSettingsDTO, PaginationSettings>(paginationSettings);
+            var settings = PaginationSettingsDTO.Map(paginationSettings);
             var products = await _repository.ListAsync(settings);
-            return Result.Success(_mapper.Map<PagedList<Product>, PagedList<ProductDTO>>(products));
+            return Result.Success(new PagedList<ProductDTO>(products.Items.Select(x => ProductDTO.Map(x)).ToList(), products.TotalCount, products.PageNumber, products.PageSize));
         }
 
         public async Task<Result<ProductDTO>> UpdateDescriptionAsync(int productId, ProductDescriptionDTO description)
@@ -55,10 +51,10 @@ namespace Sample.Application.Services
             }
             else
             {
-                _mapper.Map(description, product);
+                ProductDescriptionDTO.Map(description, product);
                 _repository.UpdateAsync(product);
                 product = await _repository.GetAsync(productId);
-                return Result.Success(_mapper.Map<Product, ProductDTO>(product));
+                return Result.Success(ProductDTO.Map(product));
             }
         }
     }

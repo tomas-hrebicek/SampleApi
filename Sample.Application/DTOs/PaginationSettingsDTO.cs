@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Sample.Domain.Domain;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Sample.Application.DTOs
@@ -8,6 +9,16 @@ namespace Sample.Application.DTOs
     /// </summary>
     public record PaginationSettingsDTO
     {
+        public static PaginationSettings Map(PaginationSettingsDTO source, PaginationSettings dest = null)
+        {
+            dest ??= new PaginationSettings();
+
+            dest.PageNumber = source.PageNumber;
+            dest.PageSize = source.PageSize;
+
+            return dest;
+        }
+
         /// <summary>
         /// What page to display.
         /// </summary>

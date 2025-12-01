@@ -1,24 +1,11 @@
-using AutoMapper;
-using Sample.Domain.Entities;
-using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Collections.Generic;
-using Sample.Domain.Domain;
-using Sample.Infrastructure;
 using Sample.Application.DTOs;
+using Sample.Domain.Domain;
 
 namespace Sample.Test.Controllers
 {
     public class ProductTest
     {
-        private IMapper _mapper;
-
-        public ProductTest()
-        {
-            _mapper = new MapperConfiguration(mc => mc.AddMaps(typeof(Api.Profiles.ProductProfile).Assembly)).CreateMapper();
-        }
-
         [Fact]
         public async void ListReturnsData()
         {
@@ -53,12 +40,13 @@ namespace Sample.Test.Controllers
 
             // Act
             var actionResult = await controller.List();
-            
+
             // Assert
-            var okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
-            var value = okResult.Value.Should().NotBeNull().And.BeAssignableTo<IEnumerable<ProductDTO>>().Subject;
-            value.Should().NotBeNull();
-            value.Should().HaveCount(3);
+            var okResult = Assert.IsAssignableFrom<OkObjectResult>(actionResult);
+            Assert.NotNull(okResult);
+            var value = Assert.IsAssignableFrom<IEnumerable<ProductDTO>>(actionResult);
+            Assert.NotNull(value);
+            Assert.Equal(value.Count(), (int)3);
         }
 
         [Fact]
@@ -93,7 +81,7 @@ namespace Sample.Test.Controllers
             var repository = new Mock<Application.Interfaces.IProductsService>();
             repository.Setup(x => x.ListAsync(It.IsAny<PaginationSettingsDTO>())).ReturnsAsync((PaginationSettingsDTO pagination) =>
             {
-                PaginationSettings p = _mapper.Map<PaginationSettingsDTO, PaginationSettings>(pagination);
+                PaginationSettings p = PaginationSettingsDTO.Map(pagination);
                 var query = items.AsQueryable();
                 var totalCount = query.Count();
                 var list = query.Skip((p.PageNumber - 1) * p.PageSize).Take(p.PageSize).ToList();
@@ -110,14 +98,16 @@ namespace Sample.Test.Controllers
 
             // Act
             var actionResult = await controller.ListPagination(pagination);
-
+   
             // Assert
-            var okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
-            var value = okResult.Value.Should().NotBeNull().And.BeOfType<PagedList<ProductDTO>>().Subject;
-            value.Should().NotBeNull();
-            value.Items.Should().NotBeNull().And.HaveCount(pagination.PageSize);
-            value.PageCount.Should().Be(2);
-            value.TotalCount.Should().Be(3);
+            var okResult = Assert.IsAssignableFrom<OkObjectResult>(actionResult);
+            Assert.NotNull(okResult);
+            var value = Assert.IsAssignableFrom<PagedList<ProductDTO>>(actionResult);
+            Assert.NotNull(value);
+            Assert.NotNull(value.Items);
+            Assert.Equal(value.Items.Count, pagination.PageSize);
+            Assert.Equal(value.PageCount, (int)2);
+            Assert.Equal(value.TotalCount, (int)3);
         }
 
         [Fact]
@@ -141,10 +131,11 @@ namespace Sample.Test.Controllers
             var actionResult = await controller.Get(expectedProductId);
 
             // Assert
-            var okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
-            var value = okResult.Value.Should().NotBeNull().And.BeOfType<ProductDTO>().Subject;
-            value.Should().NotBeNull();
-            value.Id.Should().Be(expectedProductId);
+            var okResult = Assert.IsAssignableFrom<OkObjectResult>(actionResult);
+            Assert.NotNull(okResult);
+            var value = Assert.IsAssignableFrom<ProductDTO>(actionResult);
+            Assert.NotNull(value);
+            Assert.Equal(value.Id, expectedProductId);
         }
 
         [Fact]
@@ -160,8 +151,8 @@ namespace Sample.Test.Controllers
             var actionResult = await controller.Get(123);
 
             // Assert
-            actionResult.Should().NotBeNull();
-            actionResult.Should().BeOfType<NotFoundResult>();
+            Assert.NotNull(actionResult);
+            Assert.IsAssignableFrom<NotFoundResult>(actionResult);
         }
 
         [Fact]
@@ -187,11 +178,12 @@ namespace Sample.Test.Controllers
             var actionResult = await controller.UpdateDescription(productId, description);
 
             // Assert
-            var okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
-            var value = okResult.Value.Should().NotBeNull().And.BeOfType<ProductDTO>().Subject;
-            value.Should().NotBeNull();
-            value.Id.Should().Be(productId);
-            value.Description.Should().Be(description.Description);
+            var okResult = Assert.IsAssignableFrom<OkObjectResult>(actionResult);
+            Assert.NotNull(okResult);
+            var value = Assert.IsAssignableFrom<ProductDTO>(actionResult);
+            Assert.NotNull(value);
+            Assert.Equal(value.Id, productId);
+            Assert.Equal(value.Description, description.Description);
         }
 
         [Fact]
@@ -210,8 +202,8 @@ namespace Sample.Test.Controllers
             var actionResult = await controller.UpdateDescription(productId, description);
 
             // Assert
-            actionResult.Should().NotBeNull();
-            actionResult.Should().BeOfType<NotFoundResult>();
+            Assert.NotNull(actionResult);
+            Assert.IsAssignableFrom<NotFoundResult>(actionResult);
         }
     }
 }

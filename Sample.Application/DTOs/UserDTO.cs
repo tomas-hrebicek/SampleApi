@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Sample.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Sample.Application.DTOs
 {
@@ -7,6 +8,17 @@ namespace Sample.Application.DTOs
     /// </summary>
     public record UserDTO
     {
+        public static UserDTO Map(User source, UserDTO dest = null)
+        {
+            dest ??= new UserDTO();
+
+            dest.Id = source.Id;
+            dest.Username = source.Username;
+            dest.Active = source.Active;
+
+            return dest;
+        }
+
         /// <summary>
         /// User unique identificator
         /// </summary>

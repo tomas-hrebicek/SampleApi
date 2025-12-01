@@ -5,6 +5,16 @@ namespace Sample.Application
 {
     public class Account
     {
+        public static Account Map(User source, Account dest = null)
+        {
+            dest ??= new Account();
+
+            dest.Id = source.Id;
+            dest.Username = source.Username;
+
+            return dest;
+        }
+
         [Required]
         public int Id { get; set; }
         [Required]

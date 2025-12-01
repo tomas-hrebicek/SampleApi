@@ -12,7 +12,6 @@ namespace Sample.Application
         /// <param name="services">service collection</param>
         public static void AddApplicationLayer(this IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(ServiceCollectionExtensions).Assembly);
             AddServices(services);
         }
 

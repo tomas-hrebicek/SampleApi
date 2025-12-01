@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Sample.Application.DTOs;
+﻿using Sample.Application.DTOs;
 using Sample.Application.Interfaces;
 using Sample.Domain.Entities;
 using Sample.Domain.Interfaces;
@@ -13,13 +12,11 @@ namespace Sample.Application.Services
     {
         private const int HASH_LENGTH = 64;
 
-        public SecurityService(IUsersRepository repository, IMapper mapper)
+        public SecurityService(IUsersRepository repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        private readonly IMapper _mapper;
         private readonly IUsersRepository _repository;
 
         public async Task<Result<UserDTO>> CreateAccount(CreateAccountDTO accountData)
@@ -42,7 +39,7 @@ namespace Sample.Application.Services
             };
 
             newUser = await _repository.InsertAsync(newUser);
-            return Result.Success(_mapper.Map<User, UserDTO>(newUser));
+            return Result.Success(UserDTO.Map(newUser));
         }
 
         public async Task<Result<Account>> Authenticate(string login, string password)
@@ -57,7 +54,7 @@ namespace Sample.Application.Services
             {
                 SecurityProvider passwordProvider = new SecurityProvider();
                 bool passwordOk = passwordProvider.VerifyPassword(password, user.Password, user.Salt);
-                return passwordOk ? Result.Success(_mapper.Map<User, Account>(user)) : Result.Failure<Account>(new SecurityError("Bad password"));
+                return passwordOk ? Result.Success(Account.Map(user)) : Result.Failure<Account>(new SecurityError("Bad password"));
             }
         }
     }

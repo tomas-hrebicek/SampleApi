@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Sample.Application.DTOs;
+﻿using Sample.Application.DTOs;
 using Sample.Application.Interfaces;
 using Sample.Domain.Domain;
 using Sample.Domain.Entities;
@@ -9,13 +8,11 @@ namespace Sample.Application.Services
 {
     internal class UsersService : IUsersService
     {
-        public UsersService(IUsersRepository repository, IMapper mapper)
+        public UsersService(IUsersRepository repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        private readonly IMapper _mapper;
         private readonly IUsersRepository _repository;
 
         public async Task<Result<UserDTO>> GetAsync(int id)
@@ -23,15 +20,15 @@ namespace Sample.Application.Services
             var user = await _repository.GetAsync(id);
             return user is null 
                 ? Result.Failure<UserDTO>(new NotFoundError()) 
-                : Result.Success(_mapper.Map<User, UserDTO>(user));
+                : Result.Success(UserDTO.Map(user));
         }
 
         public async Task<Result<PagedList<UserDTO>>> ListAsync(PaginationSettingsDTO paginationSettings)
         {
-            var settings = _mapper.Map<PaginationSettingsDTO, PaginationSettings>(paginationSettings);
+            var settings = PaginationSettingsDTO.Map(paginationSettings);
             var users = await _repository.ListAsync(settings);
 
-            return Result.Success(_mapper.Map<PagedList<User>, PagedList<UserDTO>>(users));
+            return Result.Success(new PagedList<UserDTO>(users.Items.Select(x => UserDTO.Map(x)).ToList(), users.TotalCount, users.PageNumber, users.PageSize));
         }
     }
 }

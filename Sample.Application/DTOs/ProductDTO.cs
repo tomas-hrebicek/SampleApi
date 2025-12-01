@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Sample.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Sample.Application.DTOs
 {
@@ -7,6 +8,19 @@ namespace Sample.Application.DTOs
     /// </summary>
     public record ProductDTO
     {
+        public static ProductDTO Map(Product source, ProductDTO dest = null)
+        {
+            dest ??= new ProductDTO();
+
+            dest.Id = source.Id;
+            dest.Name = source.Name;
+            dest.ImgUri = source.ImgUri;
+            dest.Price = source.Price;
+            dest.Description = source.Description;
+
+            return dest;
+        }
+
         /// <summary>
         /// Product unique identificator
         /// </summary>
