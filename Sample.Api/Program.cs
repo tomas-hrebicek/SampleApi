@@ -28,6 +28,8 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddSwagger();
 
+builder.Services.AddHealthChecks().AddCheck<HealthCheck>("basic");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
