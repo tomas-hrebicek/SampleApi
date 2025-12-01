@@ -1,9 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Net;
 
 namespace Sample.Api
 {
+    internal static class MemoryIssueTracker
+    {
+        public static volatile bool HadOutOfMemory = false;
+    }
+
     /// <summary>
     /// Provides global exception handling middleware.
     /// </summary>
@@ -31,6 +38,15 @@ namespace Sample.Api
         {
             _logger = logger;
             _next = next;
+        }
+
+        private static bool CheckOutOfMemoryException(Exception ex)
+        {
+            if (ex == null) return false;
+            if (ex is OutOfMemoryException) return true;
+            if (ex is AggregateException aex)
+                return aex.InnerExceptions?.Any(CheckOutOfMemoryException) == true;
+            return CheckOutOfMemoryException(ex.InnerException);
         }
 
         private static ActionContext CreateActionContext(HttpContext context)
@@ -75,6 +91,23 @@ namespace Sample.Api
             await result.ExecuteResultAsync(actionContext);
         }
 
+        private async Task InvokeExceptionAsync(HttpContext httpContext, Exception exception)
+        {
+            try
+            {
+                if (CheckOutOfMemoryException(exception))
+                {
+                    MemoryIssueTracker.HadOutOfMemory = true;
+                }
+
+                await HandleExceptionAsync(httpContext, exception);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Failed to handle exception.");
+            }
+        }
+
         protected virtual HttpStatusCode GetStatusCode(Exception exception)
         {
             return HttpStatusCode.InternalServerError;
@@ -86,9 +119,9 @@ namespace Sample.Api
             {
                 await _next(httpContext);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                await HandleExceptionAsync(httpContext, ex);
+                await InvokeExceptionAsync(httpContext, exception);
             }
         }
     }
